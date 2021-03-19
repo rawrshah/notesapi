@@ -8,8 +8,8 @@ use Illuminate\Http\Request;
 use App\Http\Controllers\API\APIController as APIController;
 use App\Models\Note;
 use Illuminate\Http\Response;
-use Validator;
 use App\Http\Resources\Note as NoteResource;
+use Illuminate\Support\Facades\Validator;
 
 class NoteController extends APIController
 {
@@ -20,7 +20,8 @@ class NoteController extends APIController
      */
     public function index(): JsonResponse
     {
-        $notes = Note::all();
+        $user = auth('api')->user();
+        $notes = $user->notes;
 
         return $this->sendResponse(NoteResource::collection($notes), 'Notes retrieved successfully.');
     }
@@ -62,8 +63,16 @@ class NoteController extends APIController
     {
         $note = Note::find($id);
 
-        if (is_null($note)) {
+        if (is_null($note))
+        {
             return $this->sendError('Note not found.');
+        }
+
+        $user = auth('api')->user();
+
+        if (is_null($note->user) || ($user->id != $note->user->id))
+        {
+            return $this->sendError('Forbidden.', [], 403);
         }
 
         return $this->sendResponse(new NoteResource($note), 'Note retrieved successfully.');
@@ -90,6 +99,13 @@ class NoteController extends APIController
             return $this->sendError('Validation Error.', $validator->errors());
         }
 
+        $user = auth('api')->user();
+
+        if (is_null($note->user) || ($user->id != $note->user->id))
+        {
+            return $this->sendError('Forbidden.', [], 403);
+        }
+
         $note->title = $input['title'];
         $note->content = $input['content'];
         $note->save();
@@ -106,6 +122,13 @@ class NoteController extends APIController
      */
     public function destroy(Note $note): JsonResponse
     {
+        $user = auth('api')->user();
+
+        if (is_null($note->user) || ($user->id != $note->user->id))
+        {
+            return $this->sendError('Forbidden.', [], 403);
+        }
+
         $note->delete();
 
         return $this->sendResponse([], 'Note deleted successfully.');
