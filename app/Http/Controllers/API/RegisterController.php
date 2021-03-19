@@ -60,7 +60,7 @@ class RegisterController extends APIController
 
             return $this->sendResponse($result, 'User login successfully.');
         } else {
-            return $this->sendError('Unauthorised.', ['error' => 'Unauthorised']);
+            return $this->sendError('Unauthorized.', ['error' => 'Unauthorized']);
         }
     }
 }

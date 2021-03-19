@@ -44,6 +44,9 @@ class NoteController extends APIController
             return $this->sendError('Validation Error.', $validator->errors());
         }
 
+        $user = auth('api')->user();
+        $input['user_id'] = $user->id;
+
         $note = Note::create($input);
 
         return $this->sendResponse(new NoteResource($note), 'Note created successfully.');
